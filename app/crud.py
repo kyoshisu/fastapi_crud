@@ -1,6 +1,6 @@
+from app.models import Student, Grade, User
 from sqlalchemy.orm import Session
 from sqlalchemy import distinct
-from app.models import Student, Grade
 from typing import List, Dict, Any
 import csv
 
