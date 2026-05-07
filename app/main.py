@@ -1,17 +1,31 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db, engine
-from app.models import Base, Student, Grade, User
-from app import crud
+from app.models import Base
 from app.auth import router as auth_router
 from app.dependencies import require_auth
+from app.background_tasks import load_csv_background, delete_students_background
+from app import crud
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="University API with Auth")
+app = FastAPI(title="University API with Background Tasks")
 
 app.include_router(auth_router)
+
+@app.post("/tasks/load-csv")
+def task_load_csv(csv_path: str, background_tasks: BackgroundTasks, _=Depends(require_auth)):
+    """Запускает фоновую загрузку данных из CSV"""
+    background_tasks.add_task(load_csv_background, csv_path)
+    return {"message": "Фоновая загрузка запущена", "csv_path": csv_path}
+
+
+@app.post("/tasks/delete-students")
+def task_delete_students(student_ids: List[int], background_tasks: BackgroundTasks, _=Depends(require_auth)):
+    """Запускает фоновое удаление студентов по списку ID"""
+    background_tasks.add_task(delete_students_background, student_ids)
+    return {"message": "Фоновое удаление запущено", "student_ids": student_ids}
 
 @app.post("/students")
 def create_student(last_name: str, first_name: str, faculty: str, db: Session = Depends(get_db), _=Depends(require_auth)):
@@ -64,11 +78,6 @@ def delete_grade(grade_id: int, db: Session = Depends(get_db), _=Depends(require
     if not crud.delete_grade(db, grade_id):
         raise HTTPException(404, "Оценка не найдена")
     return {"message": "Оценка удалена"}
-
-@app.post("/load-csv")
-def load_csv(db: Session = Depends(get_db), _=Depends(require_auth)):
-    students_count, grades_count = crud.load_csv_to_db(db)
-    return {"message": f"Загружено {students_count} студентов, {grades_count} оценок"}
 
 @app.get("/faculty/{faculty}/students")
 def get_students_by_faculty(faculty: str, db: Session = Depends(get_db), _=Depends(require_auth)):
