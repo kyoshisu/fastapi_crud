@@ -77,7 +77,6 @@ def get_unique_courses(db: Session) -> List[str]:
     return [c[0] for c in courses]
 
 def get_students_low_grade_by_course(db: Session, course: str, threshold: int = 30) -> List[Dict]:
-    """Студенты с оценкой ниже threshold по выбранному курсу"""
     results = db.query(Student, Grade).join(Grade).filter(
         Grade.course == course,
         Grade.score < threshold
@@ -95,7 +94,6 @@ def get_students_low_grade_by_course(db: Session, course: str, threshold: int = 
     ]
 
 def get_average_score_by_faculty(db: Session, faculty: str) -> float:
-    """Средний балл по факультету"""
     students = db.query(Student).filter(Student.faculty == faculty).all()
     if not students:
         return 0.0
@@ -110,7 +108,6 @@ def get_average_score_by_faculty(db: Session, faculty: str) -> float:
     return round(avg, 2)
 
 def load_csv_to_db(db: Session, csv_path: str = "students.csv"):
-    """Загрузка данных из CSV в БД"""
     db.query(Grade).delete()
     db.query(Student).delete()
     db.commit()
@@ -143,7 +140,6 @@ def load_csv_to_db(db: Session, csv_path: str = "students.csv"):
     return len(students_cache), db.query(Grade).count()
 
 def export_to_csv(db: Session, csv_path: str = "exported.csv"):
-    """Выгрузка всех данных в CSV (задание 5*)"""
     students = db.query(Student).all()
     
     with open(csv_path, "w", encoding="utf-8", newline="") as file:

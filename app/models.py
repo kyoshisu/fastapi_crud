@@ -29,4 +29,4 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    is_active = Column(Integer, default=1)  # 1 = активен, 0 = заблокирован
+    is_active = Column(Integer, default=1)

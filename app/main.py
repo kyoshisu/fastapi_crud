@@ -10,20 +10,17 @@ from app import crud
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="University API with Background Tasks")
+app = FastAPI(title="University API with Auth")
 
 app.include_router(auth_router)
 
 @app.post("/tasks/load-csv")
 def task_load_csv(csv_path: str, background_tasks: BackgroundTasks, _=Depends(require_auth)):
-    """Запускает фоновую загрузку данных из CSV"""
     background_tasks.add_task(load_csv_background, csv_path)
     return {"message": "Фоновая загрузка запущена", "csv_path": csv_path}
 
-
 @app.post("/tasks/delete-students")
 def task_delete_students(student_ids: List[int], background_tasks: BackgroundTasks, _=Depends(require_auth)):
-    """Запускает фоновое удаление студентов по списку ID"""
     background_tasks.add_task(delete_students_background, student_ids)
     return {"message": "Фоновое удаление запущено", "student_ids": student_ids}
 
